@@ -44,11 +44,19 @@ class MainActivity : AppCompatActivity() {
         // Set the profile picture to the user's profile picture
         if (user != null) {
             val profilePicUrl = user.photoUrl
-            if (profilePicUrl != null) {
-                val downloadImageTask = DownloadImageTask()
-                downloadImageTask.execute(profilePicUrl.toString())
-                val bitmap = downloadImageTask.get()
-                profilePictureImage.setImageBitmap(bitmap)
+
+            try {
+                if (profilePicUrl != null) {
+                    val downloadImageTask = DownloadImageTask()
+                    downloadImageTask.execute(profilePicUrl.toString())
+                    val bitmap = downloadImageTask.get()
+                    profilePictureImage.setImageBitmap(bitmap)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+
+                // Set the image to a default image
+                profilePictureImage.setImageResource(R.drawable.dummy_profile_pic)
             }
 
         } else {
