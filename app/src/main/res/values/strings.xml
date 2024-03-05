@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BoberChat</string>
+    <string name="chats_title_text">Chats</string>
 </resources>
