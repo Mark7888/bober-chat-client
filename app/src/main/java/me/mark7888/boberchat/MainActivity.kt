@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.AsyncTask
 import android.os.Bundle
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
@@ -91,6 +92,16 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, ProfileActivity::class.java)
             startActivity(intent)
         }
+
+        // the button new_chat_button redirects to newchatactivity
+        val newChatButton = findViewById<Button>(R.id.new_chat_button)
+
+        newChatButton.setOnClickListener {
+            val intent = Intent(this, NewChatActivity::class.java)
+            startActivity(intent)
+        }
+
+
 
         val chatSelectList = findViewById<ListView>(R.id.chat_select_list)
 
