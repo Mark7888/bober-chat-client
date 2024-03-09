@@ -1,22 +1,41 @@
 package me.mark7888.boberchat
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 
+
 class SignInActivity : AppCompatActivity() {
 
 
     companion object {
         private const val RC_SIGN_IN = 9001
+
+        fun tokenRequest() {
+            val mUser = FirebaseAuth.getInstance().currentUser
+            mUser!!.getIdToken(true)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val idToken = task.result.token
+
+                        if (idToken != null) {
+                            // Set the auth token in the AuthenticationHandler
+                            AuthenticationHandler.setAuthToken(idToken)
+                        } else {
+                            // Handle error -> task.getException();
+                        }
+                    } else {
+                        // Handle error -> task.getException();
+                    }
+                }
+        }
     }
 
     private lateinit var auth: FirebaseAuth

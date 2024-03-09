@@ -1,5 +1,4 @@
 <resources>
     <string name="app_name">BoberChat</string>
     <string name="chats_title_text">Chats</string>
-    <string name="server_url">https://ccd3-185-45-199-174.ngrok-free.app</string>
 </resources>

@@ -1,9 +1,6 @@
 package me.mark7888.boberchat
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.AsyncTask
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
@@ -16,11 +13,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import java.io.InputStream
-import java.io.OutputStreamWriter
-import java.lang.ref.WeakReference
-import java.net.HttpURLConnection
-import java.net.URL
 
 
 class MainActivity : AppCompatActivity() {
@@ -47,23 +39,7 @@ class MainActivity : AppCompatActivity() {
 
         // Set the profile picture to the user's profile picture
         if (user != null) {
-
-
-            // auth with api TODO
-            user?.getIdToken(true)?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val idToken = task.result?.token
-                    val email = user.email
-                    val clientId = getString(R.string.default_web_client_id)
-
-                    val connectionHandler = ConnectionHandler(this)
-                    connectionHandler.sendAuthRequest(idToken, email, clientId)
-
-
-                } else {
-                    // Handle error -> task.getException();
-                }
-            }
+            authenticateUser()
 
             val profilePicUrl = user.photoUrl
 
@@ -105,7 +81,10 @@ class MainActivity : AppCompatActivity() {
 
         val chatSelectList = findViewById<ListView>(R.id.chat_select_list)
 
+
+        //
         // fill in chat list from api TODO
+        //
 
 
         // if chat_select_list is empty, redirect to new chat activity
@@ -113,5 +92,24 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, NewChatActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    private fun authenticateUser() {
+        val mUser = FirebaseAuth.getInstance().currentUser
+        mUser!!.getIdToken(true)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val idToken = task.result.token
+
+                    if (idToken != null) {
+                        AuthenticationHandler.setAuthToken(idToken)
+                    }
+                    else {
+                        // Handle error -> idToken is null
+                    }
+                } else {
+                    // Handle error -> task.getException();
+                }
+            }
     }
 }
