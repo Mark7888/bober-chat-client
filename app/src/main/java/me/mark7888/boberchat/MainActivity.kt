@@ -179,12 +179,14 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
 
 data class ChatListItem(
     val profilePicture: Bitmap,
+    val profilePictureUrl: String,
     val name: String,
     val email: String,
     val time: String
 ) {
     constructor(json: JsonObject) : this(
         profilePicture = Utils().execute(json.get("partner_picture").asString).get(),
+        profilePictureUrl = json.get("partner_picture").asString,
         name = json.get("partner_name").asString,
         email = json.get("partner_email").asString,
         time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(json.get("last_message_time").asLong))
@@ -206,6 +208,14 @@ class ChatListAdapter(context: Context, private val data: List<ChatListItem>) :
         profilePicture.setImageBitmap(item.profilePicture)
         name.text = item.name
         time.text = item.time
+
+        view.setOnClickListener(View.OnClickListener {
+            val intent = Intent(context, ChatActivity::class.java)
+            intent.putExtra("recipientProfilePicture", item.profilePictureUrl)
+            intent.putExtra("recipientName", item.name)
+            intent.putExtra("recipientEmail", item.email)
+            context.startActivity(intent)
+        })
 
         return view
     }
