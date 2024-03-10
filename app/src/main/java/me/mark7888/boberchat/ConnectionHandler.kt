@@ -1,7 +1,11 @@
 package me.mark7888.boberchat
 
+import android.util.Log
 import com.github.kittinunf.fuel.Fuel
+import com.github.kittinunf.fuel.core.awaitResponse
 import com.github.kittinunf.fuel.core.extensions.jsonBody
+import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.result.Result
 import kotlinx.coroutines.runBlocking
 
 
@@ -10,12 +14,34 @@ object ConnectionHandler {
 
     fun postRequestJson(endpoint: String, json: String): Int {
         var statusCode = 0
-        Fuel.post(SERVER_BASE_URL + endpoint)
-            .jsonBody(json)
-            .also { println(it) }
-            .response { _, response, _ ->
-                statusCode = response.statusCode
-            }
+        // hold the request until the response is received
+        runBlocking {
+            Fuel.post(SERVER_BASE_URL + endpoint)
+                .jsonBody(json)
+                .also { println(it) }
+                .response { _, response, _ ->
+                    statusCode = response.statusCode
+                }
+        }
         return statusCode
+    }
+
+    fun getRequestJson(endpoint: String): String {
+        var responseJson = "[]"
+
+        val (request, response, result) = (SERVER_BASE_URL + endpoint)
+            .httpGet().responseString()
+
+        when (result) {
+            is Result.Failure -> {
+                val ex = result.getException()
+                Log.e("ConnectionHandler", ex.toString())
+            }
+            is Result.Success -> {
+                responseJson = result.get()
+            }
+        }
+
+        return responseJson
     }
 }

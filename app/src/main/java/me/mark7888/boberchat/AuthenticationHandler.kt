@@ -1,5 +1,7 @@
 package me.mark7888.boberchat
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.health.connect.datatypes.AppInfo
 import android.util.Log
 
@@ -11,6 +13,18 @@ object AuthenticationHandler {
     private var localApiKey: String = ""
     private var authRetryCount: Int = 0
     private const val MAX_AUTH_RETRY_COUNT: Int = 3
+
+    private val sharedPreferences: SharedPreferences = MyApp.applicationContext().getSharedPreferences("AuthenticationHandler", Context.MODE_PRIVATE)
+
+    private var onChatUpdateListener: OnChatsUpdateListener? = null
+
+    fun setOnChatUpdateListener(listener: OnChatsUpdateListener) {
+        onChatUpdateListener = listener
+    }
+
+    init {
+        localApiKey = sharedPreferences.getString("localApiKey", "") ?: ""
+    }
 
     fun setMessagingToken(token: String) {
         if (token == messagingToken) {
@@ -47,7 +61,13 @@ object AuthenticationHandler {
     }
 
     fun getApiKey(): String {
+        localApiKey = sharedPreferences.getString("localApiKey", "") ?: ""
         return localApiKey
+    }
+
+    fun setApiKey(apiKey : String) {
+        sharedPreferences.edit().putString("localApiKey", localApiKey).apply()
+        localApiKey = apiKey
     }
 
     private fun authToServer(force:Boolean = false) {
@@ -60,11 +80,14 @@ object AuthenticationHandler {
             Log.d("AuthenticationHandler", "Authenticating to server")
             // send the tokens to the server
             val statusCode = ConnectionHandler.postRequestJson("/authenticate", "{ \"messagingToken\" : \"$messagingToken\", \"authToken\" : \"$authToken\" }")
+
+            /*
             if (statusCode == 200) {
                 Log.d("AuthenticationHandler", "Authentication request sent to server")
                 return
             }
             Log.e("AuthenticationHandler", "Failed to send authentication request to server")
+            */
         }
     }
 
@@ -78,7 +101,9 @@ object AuthenticationHandler {
         if (apiKey != null) {
             // The server has acknowledged the authentication
             isAuthenticated = true
-            localApiKey = apiKey
+            setApiKey(apiKey)
+
+            onChatUpdateListener?.onChatsUpdate()
 
             Log.d("AuthenticationHandler", "Server acknowledged authentication successfully")
             return
@@ -96,5 +121,10 @@ object AuthenticationHandler {
         // re-authenticate to server after 10 seconds
         Thread.sleep(10000)
         authToServer(true)
+    }
+
+
+    interface OnChatsUpdateListener {
+        fun onChatsUpdate()
     }
 }

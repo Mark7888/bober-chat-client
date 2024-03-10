@@ -12,27 +12,33 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:paddingTop="10dp"
+        android:paddingRight="10dp"
+        android:paddingLeft="10dp"
+        android:paddingBottom="10dp"
         tools:ignore="TextSizeCheck">
 
         <ImageView
             android:id="@+id/profile_picture_image"
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
             android:layout_weight="1"
             app:srcCompat="@drawable/dummy_profile_pic" />
 
         <TextView
             android:id="@+id/chats_text_view"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="6"
             android:text="@string/chats_title_text"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textSize="30sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/new_chat_button"
-            android:layout_width="100dp"
-            android:layout_height="40dp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="+" />
 
@@ -40,12 +46,16 @@
 
     <Space
         android:layout_width="match_parent"
-        android:layout_height="20dp" />
+        android:layout_height="10dp" />
 
     <SearchView
         android:id="@+id/chat_search"
         android:layout_width="match_parent"
         android:layout_height="30dp" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="10dp" />
 
     <TextView
         android:id="@+id/chats_loading_text"
@@ -55,8 +65,15 @@
         android:textAlignment="center"
         android:textSize="20sp" />
 
-    <ListView
-        android:id="@+id/chat_select_list"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+        <ListView
+            android:id="@+id/chat_select_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

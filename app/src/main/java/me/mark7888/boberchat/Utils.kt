@@ -1,5 +1,7 @@
 package me.mark7888.boberchat
 
+import android.app.Application
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.AsyncTask
@@ -7,7 +9,7 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-class DownloadImageTask : AsyncTask<String, Void, Bitmap>() {
+class Utils : AsyncTask<String, Void, Bitmap>() {
     override fun doInBackground(vararg urls: String): Bitmap? {
         val url = urls[0]
         var bmp: Bitmap? = null
@@ -21,5 +23,19 @@ class DownloadImageTask : AsyncTask<String, Void, Bitmap>() {
             e.printStackTrace()
         }
         return bmp
+    }
+}
+
+class MyApp : Application() {
+    init {
+        instance = this
+    }
+
+    companion object {
+        private var instance: MyApp? = null
+
+        fun applicationContext() : Context {
+            return instance!!.applicationContext
+        }
     }
 }

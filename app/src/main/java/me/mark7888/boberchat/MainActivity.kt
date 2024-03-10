@@ -3,8 +3,8 @@ package me.mark7888.boberchat
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,21 +15,40 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isEmpty
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateListener {
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var mAuth: FirebaseAuth
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
+        swipeRefreshLayout.setOnRefreshListener {
+            loadChats()
+        }
+
+        AuthenticationHandler.setOnChatUpdateListener(this)
 
         mAuth = FirebaseAuth.getInstance()
 
@@ -53,9 +72,11 @@ class MainActivity : AppCompatActivity() {
 
             try {
                 if (profilePicUrl != null) {
-                    val downloadImageTask = DownloadImageTask()
+
+                    val downloadImageTask = Utils()
                     downloadImageTask.execute(profilePicUrl.toString())
                     val bitmap = downloadImageTask.get()
+
                     profilePictureImage.setImageBitmap(bitmap)
                 }
             } catch (e: Exception) {
@@ -85,64 +106,90 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        // loadChats()
+    }
+
+    override fun onChatsUpdate() {
         loadChats()
     }
 
+
     private fun loadChats() {
-        val chatSelectList = findViewById<ListView>(R.id.chat_select_list)
-        val chatsLoadingText = findViewById<TextView>(R.id.chats_loading_text)
-        chatsLoadingText.text = "Loading chats..."
+        CoroutineScope(Dispatchers.IO).launch {
+            withContext(Dispatchers.Main) {
+                val chatsLoadingText = findViewById<TextView>(R.id.chats_loading_text)
+                chatsLoadingText.text = "Loading chats..."
+            }
 
+            val apiKey = AuthenticationHandler.getApiKey()
+            if (apiKey.isEmpty()) {
+                // The user is not authenticated
+                return@launch
+            }
 
-        //
-        // fill in chat list from api TODO
-        // Create some dummy data for testing
-        val data = listOf(
-            ChatListItem(BitmapFactory.decodeResource(resources, R.drawable.ic_google), "Name 1", "Time 1"),
-            ChatListItem(BitmapFactory.decodeResource(resources, R.drawable.ic_google), "Name 2", "Time 2")
-        )
+            val chats = ConnectionHandler.getRequestJson("/get_chats?apiKey=${AuthenticationHandler.getApiKey()}")
 
-        val adapter = ChatListAdapter(this, data)
-        chatSelectList.adapter = adapter
+            Log.d("MainActivity", "Chats: '$chats'")
 
+            val jsonArray: JsonArray = JsonParser.parseString(chats).asJsonArray
+            val chatList: List<ChatListItem> = jsonArray.map { ChatListItem(it.asJsonObject) }
 
-        // test after api call TODO
-        if (chatSelectList.isEmpty()) {
-            // change chats_loading_text to "No chats found"
-            chatsLoadingText.text = "No chats found"
-        }
-        else {
-            // hide chats_loading_text
-            chatsLoadingText.text = ""
-            chatsLoadingText.textSize = 0F
+            // Switch to the main thread to update the UI
+            withContext(Dispatchers.Main) {
+                val chatSelectList = findViewById<ListView>(R.id.chat_select_list)
+                val chatsLoadingText = findViewById<TextView>(R.id.chats_loading_text)
+                chatsLoadingText.text = "Loading chats..."
+
+                val adapter = ChatListAdapter(this@MainActivity, chatList)
+                chatSelectList.adapter = adapter
+
+                if (chatList.isEmpty()) {
+                    chatsLoadingText.text = "No chats found"
+                } else {
+                    chatsLoadingText.text = ""
+                    chatsLoadingText.textSize = 0F
+                }
+
+                swipeRefreshLayout.isRefreshing = false
+            }
         }
     }
 
-    private fun authenticateUser() {
-        val mUser = FirebaseAuth.getInstance().currentUser
-        mUser!!.getIdToken(true)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val idToken = task.result.token
 
-                    if (idToken != null) {
-                        AuthenticationHandler.setAuthToken(idToken)
+    private fun authenticateUser() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val mUser = FirebaseAuth.getInstance().currentUser
+            mUser!!.getIdToken(true)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val idToken = task.result.token
+
+                        if (idToken != null) {
+                            AuthenticationHandler.setAuthToken(idToken)
+                        } else {
+                            // Handle error -> idToken is null
+                        }
+                    } else {
+                        // Handle error -> task.getException();
                     }
-                    else {
-                        // Handle error -> idToken is null
-                    }
-                } else {
-                    // Handle error -> task.getException();
                 }
-            }
+        }
     }
 }
 
 data class ChatListItem(
     val profilePicture: Bitmap,
     val name: String,
+    val email: String,
     val time: String
-)
+) {
+    constructor(json: JsonObject) : this(
+        profilePicture = Utils().execute(json.get("partner_picture").asString).get(),
+        name = json.get("partner_name").asString,
+        email = json.get("partner_email").asString,
+        time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(json.get("last_message_time").asLong))
+    )
+}
 
 class ChatListAdapter(context: Context, private val data: List<ChatListItem>) :
     ArrayAdapter<ChatListItem>(context, R.layout.chat_list_item, data) {
