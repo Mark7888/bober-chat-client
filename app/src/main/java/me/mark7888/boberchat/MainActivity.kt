@@ -1,10 +1,18 @@
 package me.mark7888.boberchat
 
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.ListView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isEmpty
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -77,20 +85,36 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        loadChats()
+    }
 
-
+    private fun loadChats() {
         val chatSelectList = findViewById<ListView>(R.id.chat_select_list)
+        val chatsLoadingText = findViewById<TextView>(R.id.chats_loading_text)
+        chatsLoadingText.text = "Loading chats..."
 
 
         //
         // fill in chat list from api TODO
-        //
+        // Create some dummy data for testing
+        val data = listOf(
+            ChatListItem(BitmapFactory.decodeResource(resources, R.drawable.ic_google), "Name 1", "Time 1"),
+            ChatListItem(BitmapFactory.decodeResource(resources, R.drawable.ic_google), "Name 2", "Time 2")
+        )
+
+        val adapter = ChatListAdapter(this, data)
+        chatSelectList.adapter = adapter
 
 
-        // if chat_select_list is empty, redirect to new chat activity
+        // test after api call TODO
         if (chatSelectList.isEmpty()) {
-            val intent = Intent(this, NewChatActivity::class.java)
-            startActivity(intent)
+            // change chats_loading_text to "No chats found"
+            chatsLoadingText.text = "No chats found"
+        }
+        else {
+            // hide chats_loading_text
+            chatsLoadingText.text = ""
+            chatsLoadingText.textSize = 0F
         }
     }
 
@@ -111,5 +135,31 @@ class MainActivity : AppCompatActivity() {
                     // Handle error -> task.getException();
                 }
             }
+    }
+}
+
+data class ChatListItem(
+    val profilePicture: Bitmap,
+    val name: String,
+    val time: String
+)
+
+class ChatListAdapter(context: Context, private val data: List<ChatListItem>) :
+    ArrayAdapter<ChatListItem>(context, R.layout.chat_list_item, data) {
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.chat_list_item, parent, false)
+
+        val item = data[position]
+
+        val profilePicture = view.findViewById<ImageView>(R.id.profile_picture)
+        val name = view.findViewById<TextView>(R.id.name)
+        val time = view.findViewById<TextView>(R.id.time)
+
+        profilePicture.setImageBitmap(item.profilePicture)
+        name.text = item.name
+        time.text = item.time
+
+        return view
     }
 }
