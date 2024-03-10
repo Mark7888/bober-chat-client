@@ -10,6 +10,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import java.lang.NullPointerException
 
 
 class SignInActivity : AppCompatActivity() {
@@ -19,22 +20,27 @@ class SignInActivity : AppCompatActivity() {
         private const val RC_SIGN_IN = 9001
 
         fun tokenRequest() {
-            val mUser = FirebaseAuth.getInstance().currentUser
-            mUser!!.getIdToken(true)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val idToken = task.result.token
+            try {
+                val mUser = FirebaseAuth.getInstance().currentUser
+                mUser!!.getIdToken(true)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val idToken = task.result.token
 
-                        if (idToken != null) {
-                            // Set the auth token in the AuthenticationHandler
-                            AuthenticationHandler.setAuthToken(idToken)
+                            if (idToken != null) {
+                                // Set the auth token in the AuthenticationHandler
+                                AuthenticationHandler.setAuthToken(idToken)
+                            } else {
+                                // Handle error -> task.getException();
+                            }
                         } else {
                             // Handle error -> task.getException();
                         }
-                    } else {
-                        // Handle error -> task.getException();
                     }
-                }
+            }
+            catch (e: NullPointerException) {
+                // Handle error
+            }
         }
     }
 
