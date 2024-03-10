@@ -79,7 +79,7 @@ object AuthenticationHandler {
         if (messagingToken.isNotEmpty() && authToken.isNotEmpty()) {
             Log.d("AuthenticationHandler", "Authenticating to server")
             // send the tokens to the server
-            val statusCode = ConnectionHandler.postRequestJson("/authenticate", "{ \"messagingToken\" : \"$messagingToken\", \"authToken\" : \"$authToken\" }")
+            ConnectionHandler.postRequestJson("/authenticate", "{ \"messagingToken\" : \"$messagingToken\", \"authToken\" : \"$authToken\" }")
 
             /*
             if (statusCode == 200) {
