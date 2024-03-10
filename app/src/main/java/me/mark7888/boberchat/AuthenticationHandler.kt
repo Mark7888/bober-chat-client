@@ -1,14 +1,16 @@
 package me.mark7888.boberchat
 
+import android.health.connect.datatypes.AppInfo
 import android.util.Log
 
 object AuthenticationHandler {
-    var isAuthenticated: Boolean = false
+    private var isAuthenticated: Boolean = false
 
     private var messagingToken: String = ""
     private var authToken: String = ""
     private var localApiKey: String = ""
     private var authRetryCount: Int = 0
+    private const val MAX_AUTH_RETRY_COUNT: Int = 3
 
     fun setMessagingToken(token: String) {
         if (token == messagingToken) {
@@ -57,7 +59,12 @@ object AuthenticationHandler {
         if (messagingToken.isNotEmpty() && authToken.isNotEmpty()) {
             Log.d("AuthenticationHandler", "Authenticating to server")
             // send the tokens to the server
-            ConnectionHandler.postRequestJson("/authenticate", "{ \"messagingToken\" : \"$messagingToken\", \"authToken\" : \"$authToken\" }")
+            val statusCode = ConnectionHandler.postRequestJson("/authenticate", "{ \"messagingToken\" : \"$messagingToken\", \"authToken\" : \"$authToken\" }")
+            if (statusCode == 200) {
+                Log.d("AuthenticationHandler", "Authentication request sent to server")
+                return
+            }
+            Log.e("AuthenticationHandler", "Failed to send authentication request to server")
         }
     }
 
@@ -80,10 +87,11 @@ object AuthenticationHandler {
         isAuthenticated = false
         Log.w("AuthenticationHandler", "Server acknowledged authentication, but missing api_key")
 
-        if (authRetryCount > 3) {
-            Log.e("AuthenticationHandler", "Failed to authenticate to server")
+        if (authRetryCount > MAX_AUTH_RETRY_COUNT) {
+            Log.e("AuthenticationHandler", "Failed to authenticate to server. Retry limit exceeded")
             return
         }
+        authRetryCount++
 
         // re-authenticate to server after 10 seconds
         Thread.sleep(10000)
