@@ -42,6 +42,19 @@
         android:layout_width="match_parent"
         android:layout_height="20dp" />
 
+    <SearchView
+        android:id="@+id/chat_search"
+        android:layout_width="match_parent"
+        android:layout_height="30dp" />
+
+    <TextView
+        android:id="@+id/chats_loading_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Loading..."
+        android:textAlignment="center"
+        android:textSize="20sp" />
+
     <ListView
         android:id="@+id/chat_select_list"
         android:layout_width="match_parent"
