@@ -53,6 +53,7 @@ class MessagingService : FirebaseMessagingService() {
 
 object MessageHandler {
     fun sendMessage(recipientEmail : String, message: String) {
-        ConnectionHandler.postRequestJson("/send_message", "{ \"api_key\" : \"${AuthenticationHandler.getApiKey()}\", \"recipientEmail\" : \"${recipientEmail}\", \"messageType\" : \"text\", \"messageData\" : \"${message}\" }")
+        ConnectionHandler.postRequestJson("/send_message", "{ \"apiKey\" : \"${AuthenticationHandler.getApiKey()}\", \"recipientEmail\" : \"${recipientEmail}\", \"messageType\" : \"text\", \"messageData\" : \"${message}\" }")
+        Log.d("MessageHandler", "Message sent to $recipientEmail: $message")
     }
 }
