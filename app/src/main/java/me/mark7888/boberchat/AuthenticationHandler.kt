@@ -61,7 +61,7 @@ object AuthenticationHandler {
     }
 
     fun getApiKey(): String {
-        localApiKey = sharedPreferences.getString("localApiKey", "") ?: ""
+        // localApiKey = sharedPreferences.getString("localApiKey", "") ?: ""
         return localApiKey
     }
 

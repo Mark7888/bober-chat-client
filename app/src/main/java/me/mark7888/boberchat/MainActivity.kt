@@ -122,7 +122,9 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
             }
 
             val apiKey = AuthenticationHandler.getApiKey()
+
             if (apiKey.isEmpty()) {
+                Log.e("MainActivity", "Api key is empty!")
                 // The user is not authenticated
                 return@launch
             }

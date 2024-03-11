@@ -11,7 +11,8 @@ import kotlinx.coroutines.runBlocking
 
 
 object ConnectionHandler {
-    private const val SERVER_BASE_URL : String = "https://aef2-185-45-199-174.ngrok-free.app"
+    // private const val SERVER_BASE_URL : String = "https://aef2-185-45-199-174.ngrok-free.app"
+    private const val SERVER_BASE_URL : String = "https://api.boberchat.mark7888.hu"
 
     fun postRequestJson(endpoint: String, json: String) {
         Fuel.post(SERVER_BASE_URL + endpoint)
