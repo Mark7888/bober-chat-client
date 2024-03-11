@@ -14,7 +14,6 @@ import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isEmpty
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -73,7 +72,7 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
             try {
                 if (profilePicUrl != null) {
 
-                    val downloadImageTask = Utils()
+                    val downloadImageTask = BitmapLoader()
                     downloadImageTask.execute(profilePicUrl.toString())
                     val bitmap = downloadImageTask.get()
 
@@ -187,7 +186,7 @@ data class ChatListItem(
     val time: String
 ) {
     constructor(json: JsonObject) : this(
-        profilePicture = Utils().execute(json.get("partner_picture").asString).get(),
+        profilePicture = BitmapLoader().execute(json.get("partner_picture").asString).get(),
         profilePictureUrl = json.get("partner_picture").asString,
         name = json.get("partner_name").asString,
         email = json.get("partner_email").asString,

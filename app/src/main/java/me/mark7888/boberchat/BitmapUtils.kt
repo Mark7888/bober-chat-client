@@ -9,7 +9,7 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-class Utils : AsyncTask<String, Void, Bitmap>() {
+class BitmapLoader : AsyncTask<String, Void, Bitmap>() {
     override fun doInBackground(vararg urls: String): Bitmap? {
         val url = urls[0]
         var bmp: Bitmap? = null

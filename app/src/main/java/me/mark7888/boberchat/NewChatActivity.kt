@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import org.json.JSONObject
 import java.util.regex.Pattern
 
 class NewChatActivity : AppCompatActivity() {
@@ -47,7 +48,24 @@ class NewChatActivity : AppCompatActivity() {
                 // send post message to server
                 MessageHandler.sendMessage(emailText, chatText)
 
-                Log.d("NewChatActivity", "Email: $emailText, Message: $chatText")
+                Thread {
+                    val userData =
+                        ConnectionHandler.getRequestJson("/get_user?apiKey=${AuthenticationHandler.getApiKey()}&userEmail=${emailText}")
+                    val jsonObject = JSONObject(userData)
+
+                    val name = jsonObject.getString("name")
+                    val email = jsonObject.getString("email")
+                    val picture = jsonObject.getString("picture")
+
+                    runOnUiThread {
+                        val intent = Intent(this, ChatActivity::class.java)
+                        intent.putExtra("recipientProfilePicture", picture)
+                        intent.putExtra("recipientName", name)
+                        intent.putExtra("recipientEmail", email)
+                        this.startActivity(intent)
+                    }
+                }.start()
+
             }
         }
     }
