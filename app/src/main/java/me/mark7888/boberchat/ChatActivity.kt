@@ -90,15 +90,19 @@ class MessageListAdapter(context: Context, private val data: List<MessageListIte
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val item = data[position]
 
-        // Choose the layout based on the isSent property
-        val layoutId = if (item.isSent) R.layout.message_item_sender else R.layout.message_item_reciever
+        var layoutId = R.layout.message_item_sender
+        if (!item.isSent) {
+            layoutId = R.layout.message_item_reciever
+        }
 
         val view = convertView ?: LayoutInflater.from(context).inflate(layoutId, parent, false)
 
-        val profilePicture = view.findViewById<ImageView>(R.id.profile_picture)
-        val messageContent = view.findViewById<TextView>(R.id.message_text)
+        if (!item.isSent) {
+            val profilePicture = view.findViewById<ImageView>(R.id.profile_picture)
+            profilePicture.setImageBitmap(item.profilePicture)
+        }
 
-        profilePicture.setImageBitmap(item.profilePicture)
+        val messageContent = view.findViewById<TextView>(R.id.message_text)
         messageContent.text = item.messageContent
 
         return view
