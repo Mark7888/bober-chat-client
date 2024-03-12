@@ -28,12 +28,11 @@ class MessagingService : FirebaseMessagingService() {
 
         if (remoteMessage.data.containsKey("message")) {
             MessageHandler.notifyNewMessage(remoteMessage.data)
+
+            // TODO: Show a notification
+
             return
         }
-
-        //
-        // TODO: Handle the message
-        //
 
         super.onMessageReceived(remoteMessage)
     }
