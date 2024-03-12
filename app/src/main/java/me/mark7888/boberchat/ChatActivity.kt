@@ -26,6 +26,7 @@ import kotlinx.coroutines.withContext
 class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
     private lateinit var chatList: MutableList<MessageListItem>
     private lateinit var listAdapter: MessageListAdapter
+    private lateinit var messagesList: ListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,7 +73,7 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
         recipientNameText.text = recipientName
 
         val chatInput = findViewById<EditText>(R.id.message_content_input)
-        val messagesList = findViewById<ListView>(R.id.messages_list_view)
+        messagesList = findViewById(R.id.messages_list_view)
 
         CoroutineScope(Dispatchers.IO).launch {
             val messagesJson =
@@ -85,6 +86,7 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
 
                 listAdapter = MessageListAdapter(this@ChatActivity, chatList)
                 messagesList.adapter = listAdapter
+                messagesList.setSelection(listAdapter.count - 1)
             }
         }
 
@@ -93,6 +95,8 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
     fun addMessageToList(message: MessageListItem) {
         chatList.add(message)
         listAdapter.notifyDataSetChanged()
+        // scroll list to bottom
+        messagesList.setSelection(listAdapter.count - 1)
     }
 
 
@@ -149,8 +153,8 @@ class MessageListAdapter(context: Context, private val data: List<MessageListIte
         val view = convertView ?: LayoutInflater.from(context).inflate(layoutId, parent, false)
 
         if (!item.isSent) {
-            val profilePicture = view.findViewById<ImageView>(R.id.profile_picture)
-            profilePicture.setImageBitmap(item.profilePicture)
+
+            view.findViewById<ImageView>(R.id.profile_picture)?.setImageBitmap(item.profilePicture)
         }
 
         val messageContent = view.findViewById<TextView>(R.id.message_text)
