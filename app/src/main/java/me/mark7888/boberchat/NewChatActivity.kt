@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +16,6 @@ import java.util.regex.Pattern
 class NewChatActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_new_chat)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -23,9 +23,15 @@ class NewChatActivity : AppCompatActivity() {
             insets
         }
 
+        val backButton = findViewById<ImageButton>(R.id.back_button)
+        backButton.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
+
         val emailInput = findViewById<TextView>(R.id.email_input)
         val chatInput = findViewById<TextView>(R.id.chat_input)
-        val sendButton = findViewById<Button>(R.id.send_button)
+        val sendButton = findViewById<ImageButton>(R.id.send_button)
 
         sendButton.setOnClickListener {
             var emailText = emailInput.text.toString()

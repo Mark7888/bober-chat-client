@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
@@ -28,6 +29,9 @@ import java.util.Date
 import java.util.Locale
 
 class ChatActivity : AppCompatActivity() {
+    private lateinit var chatList: MutableList<MessageListItem>
+    private lateinit var listAdapter: MessageListAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
@@ -36,6 +40,33 @@ class ChatActivity : AppCompatActivity() {
         val recipientName = intent.getStringExtra("recipientName")
         val recipientProfilePicture = intent.getStringExtra("recipientProfilePicture")
         val profilePictureBitmap = BitmapLoader().execute(recipientProfilePicture).get()
+
+        val backButton = findViewById<ImageButton>(R.id.back_button)
+        backButton.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
+
+        val sendMessageButton = findViewById<ImageButton>(R.id.send_message_button)
+        sendMessageButton.setOnClickListener {
+            val chatInput = findViewById<EditText>(R.id.message_content_input)
+            val messageContent = chatInput.text.toString()
+            chatInput.text.clear()
+
+            if (recipientEmail != null && messageContent.isNotEmpty()) {
+                MessageHandler.sendMessage(recipientEmail, messageContent)
+
+                // add message to list
+                val message = MessageListItem(
+                    messageType = "text",
+                    messageContent = messageContent,
+                    isSent = true,
+                    profilePicture = profilePictureBitmap,
+                    messageId = "0"
+                )
+                addMessageToList(message)
+            }
+        }
 
         val profilePicture = findViewById<ImageView>(R.id.profile_pic_image)
         profilePicture.setImageBitmap(profilePictureBitmap)
@@ -51,16 +82,24 @@ class ChatActivity : AppCompatActivity() {
                 ConnectionHandler.getRequestJson("/get_messages?apiKey=${AuthenticationHandler.getApiKey()}&recipientEmail=${recipientEmail}")
 
             val jsonArray: JsonArray = JsonParser.parseString(messagesJson).asJsonArray
-            val chatList: List<MessageListItem> = jsonArray.map { MessageListItem(it.asJsonObject, profilePictureBitmap) }
 
             withContext(Dispatchers.Main) {
-                val adapter = MessageListAdapter(this@ChatActivity, chatList)
-                messagesList.adapter = adapter
+                chatList = jsonArray.map { MessageListItem(it.asJsonObject, profilePictureBitmap) }.toMutableList()
+
+                listAdapter = MessageListAdapter(this@ChatActivity, chatList)
+                messagesList.adapter = listAdapter
             }
         }
 
     }
+
+    fun addMessageToList(message: MessageListItem) {
+        chatList.add(message)
+        listAdapter.notifyDataSetChanged()
+    }
 }
+
+
 
 data class MessageListItem(
     val messageType : String,
