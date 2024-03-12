@@ -35,12 +35,13 @@
             android:textSize="30sp"
             android:textStyle="bold" />
 
-        <Button
+        <ImageButton
             android:id="@+id/new_chat_button"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="+" />
+            android:src="@drawable/plus_sign_icon"
+            android:background="?android:attr/selectableItemBackground" />
 
     </LinearLayout>
 

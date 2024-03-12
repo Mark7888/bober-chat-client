@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.SearchView
@@ -102,7 +103,7 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
         }
 
         // the button new_chat_button redirects to newchatactivity
-        val newChatButton = findViewById<Button>(R.id.new_chat_button)
+        val newChatButton = findViewById<ImageButton>(R.id.new_chat_button)
 
         newChatButton.setOnClickListener {
             val intent = Intent(this, NewChatActivity::class.java)
