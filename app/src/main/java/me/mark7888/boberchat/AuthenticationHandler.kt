@@ -2,7 +2,6 @@ package me.mark7888.boberchat
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.health.connect.datatypes.AppInfo
 import android.util.Log
 
 object AuthenticationHandler {
