@@ -26,6 +26,11 @@ class MessagingService : FirebaseMessagingService() {
             return
         }
 
+        if (remoteMessage.data.containsKey("message")) {
+            MessageHandler.notifyNewMessage(remoteMessage.data)
+            return
+        }
+
         //
         // TODO: Handle the message
         //
@@ -49,9 +54,24 @@ class MessagingService : FirebaseMessagingService() {
             })
         }
     }
+
+
 }
 
 object MessageHandler {
+    private var onNewMessageListener: OnNewMessageListener? = null
+    fun setOnNewMessageListener(listener: OnNewMessageListener) {
+        onNewMessageListener = listener
+    }
+
+    interface OnNewMessageListener {
+        fun onNewMessage(data : Map<String, String>)
+    }
+
+    fun notifyNewMessage(data : Map<String, String>) {
+        onNewMessageListener?.onNewMessage(data)
+    }
+
     fun sendMessage(recipientEmail : String, message: String) {
         ConnectionHandler.postRequestJson("/send_message", "{ \"apiKey\" : \"${AuthenticationHandler.getApiKey()}\", \"recipientEmail\" : \"${recipientEmail}\", \"messageType\" : \"text\", \"messageData\" : \"${message}\" }")
         Log.d("MessageHandler", "Message sent to $recipientEmail: $message")

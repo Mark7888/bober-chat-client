@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,13 +29,15 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
     private lateinit var chatList: MutableList<MessageListItem>
     private lateinit var listAdapter: MessageListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
+
+        MessageHandler.setOnNewMessageListener(this)
 
         val recipientEmail = intent.getStringExtra("recipientEmail")
         val recipientName = intent.getStringExtra("recipientName")
@@ -96,6 +99,27 @@ class ChatActivity : AppCompatActivity() {
     fun addMessageToList(message: MessageListItem) {
         chatList.add(message)
         listAdapter.notifyDataSetChanged()
+    }
+
+
+    override fun onNewMessage(data: Map<String, String>) {
+        if (data["senderEmail"] != intent.getStringExtra("recipientEmail")) {
+            return
+        }
+
+        runOnUiThread(Runnable {
+            val message = MessageListItem(
+                messageType = data["messageType"] ?: "text",
+                messageContent = data["message"] ?: "",
+                isSent = false,
+                profilePicture = BitmapLoader().execute(data["senderPicture"]).get(),
+                messageId = data["id"] ?: "0"
+            )
+
+            addMessageToList(message)
+        })
+
+        Log.d("ChatActivity", "New message received on listener!!!!: $data")
     }
 }
 
