@@ -1,5 +1,7 @@
 package me.mark7888.boberchat
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -88,6 +90,15 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
                 messagesList.adapter = listAdapter
                 messagesList.setSelection(listAdapter.count - 1)
             }
+        }
+
+        // add copy functionality
+        messagesList.setOnItemLongClickListener { _, _, position, _ ->
+            val item = listAdapter.getItem(position)
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Message Content", item?.messageContent)
+            clipboard.setPrimaryClip(clip)
+            true
         }
 
     }
