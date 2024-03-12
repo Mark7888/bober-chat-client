@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.ListView
+import android.widget.SearchView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -37,6 +38,9 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var mAuth: FirebaseAuth
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+
+    private lateinit var chatListAdapter: ChatListAdapter
+    private var chatList: List<ChatListItem> = listOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,6 +109,18 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
             startActivity(intent)
         }
 
+        val chatSearch = findViewById<SearchView>(R.id.chat_search)
+        chatSearch.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filterChats(newText ?: "")
+                return false
+            }
+        })
+
         // loadChats()
     }
 
@@ -133,7 +149,7 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
             Log.d("MainActivity", "Chats: '$chats'")
 
             val jsonArray: JsonArray = JsonParser.parseString(chats).asJsonArray
-            val chatList: List<ChatListItem> = jsonArray.map { ChatListItem(it.asJsonObject) }
+            chatList = jsonArray.map { ChatListItem(it.asJsonObject) }
 
             // Switch to the main thread to update the UI
             withContext(Dispatchers.Main) {
@@ -141,8 +157,8 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
                 val chatsLoadingText = findViewById<TextView>(R.id.chats_loading_text)
                 chatsLoadingText.text = "Loading chats..."
 
-                val adapter = ChatListAdapter(this@MainActivity, chatList)
-                chatSelectList.adapter = adapter
+                chatListAdapter = ChatListAdapter(this@MainActivity, chatList)
+                chatSelectList.adapter = chatListAdapter
 
                 if (chatList.isEmpty()) {
                     chatsLoadingText.text = "No chats found"
@@ -154,6 +170,12 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
                 swipeRefreshLayout.isRefreshing = false
             }
         }
+    }
+
+    private fun filterChats(query: String) {
+        val filteredChatList = chatList.filter { it.name.contains(query, ignoreCase = true) }
+        chatListAdapter = ChatListAdapter(this, filteredChatList)
+        findViewById<ListView>(R.id.chat_select_list).adapter = chatListAdapter
     }
 
 
