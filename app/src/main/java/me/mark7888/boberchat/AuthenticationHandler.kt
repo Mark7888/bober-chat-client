@@ -7,6 +7,7 @@ import android.util.Log
 object AuthenticationHandler {
     private var isAuthenticated: Boolean = false
 
+    var authedEmail : String = ""
     private var messagingToken: String = ""
     private var authToken: String = ""
     private var localApiKey: String = ""

@@ -69,6 +69,8 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
 
         // Set the profile picture to the user's profile picture
         if (user != null) {
+            AuthenticationHandler.authedEmail = user.email ?: ""
+
             authenticateUser()
 
             val profilePicUrl = user.photoUrl

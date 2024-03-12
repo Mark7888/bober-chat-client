@@ -112,7 +112,9 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
 
 
     override fun onNewMessage(data: Map<String, String>) {
-        if (data["senderEmail"] != intent.getStringExtra("recipientEmail")) {
+        Log.d("ChatActivity", "New message received on listener. Data: $data")
+
+        if (data["senderEmail"] != intent.getStringExtra("recipientEmail") || data["senderEmail"] == AuthenticationHandler.authedEmail) {
             return
         }
 
@@ -127,8 +129,6 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
 
             addMessageToList(message)
         })
-
-        Log.d("ChatActivity", "New message received on listener!!!!: $data")
     }
 }
 
