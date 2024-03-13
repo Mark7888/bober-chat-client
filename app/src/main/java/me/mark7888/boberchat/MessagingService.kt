@@ -60,7 +60,6 @@ class MessagingService : FirebaseMessagingService() {
             intent.putExtra("recipientName", messageSenderName)
             intent.putExtra("recipientEmail", messageSenderEmail)
 
-            val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
             val uniqueRequestCode = System.currentTimeMillis().toInt()
             val pendingIntent: PendingIntent = PendingIntent.getActivity(this, uniqueRequestCode, intent, PendingIntent.FLAG_IMMUTABLE)
 
