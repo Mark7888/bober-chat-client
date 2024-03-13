@@ -55,11 +55,14 @@ class MessagingService : FirebaseMessagingService() {
             val intent = Intent(this, ChatActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
+
             intent.putExtra("recipientProfilePicture", messageSenderProfileUrl)
             intent.putExtra("recipientName", messageSenderName)
             intent.putExtra("recipientEmail", messageSenderEmail)
 
             val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+            val uniqueRequestCode = System.currentTimeMillis().toInt()
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(this, uniqueRequestCode, intent, PendingIntent.FLAG_IMMUTABLE)
 
             val builder = NotificationCompat.Builder(this, "BOBERCHAT")
                 .setSmallIcon(R.drawable.ic_stat_group)
