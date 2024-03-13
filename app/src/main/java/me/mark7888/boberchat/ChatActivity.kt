@@ -153,18 +153,24 @@ data class MessageListItem(
 class MessageListAdapter(context: Context, private val data: List<MessageListItem>) :
     ArrayAdapter<MessageListItem>(context, R.layout.message_item_sender, data) {
 
+    override fun getItemViewType(position: Int): Int {
+        // Return 0 for sent messages, 1 for received messages
+        return if (data[position].isSent) 0 else 1
+    }
+
+    override fun getViewTypeCount(): Int {
+        // We have two types of views
+        return 2
+    }
+
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val item = data[position]
 
-        var layoutId = R.layout.message_item_sender
-        if (!item.isSent) {
-            layoutId = R.layout.message_item_reciever
-        }
+        val layoutId = if (getItemViewType(position) == 0) R.layout.message_item_sender else R.layout.message_item_reciever
 
         val view = convertView ?: LayoutInflater.from(context).inflate(layoutId, parent, false)
 
         if (!item.isSent) {
-
             view.findViewById<ImageView>(R.id.profile_picture)?.setImageBitmap(item.profilePicture)
         }
 

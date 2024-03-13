@@ -1,0 +1,144 @@
+name: Generated APK AAB (Upload - Create Artifact To Github Action)
+
+env:
+  # The name of the main module repository
+  main_project_module: app
+
+  # The name of the Play Store
+  playstore_name: BoberChat
+
+on:
+  workflow_dispatch: # Allow running the workflow manually from the GitHub UI
+  push:
+    branches:
+      - "*"
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Set Current Date As Env Variable
+      - name: Set current date as env variable
+        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      # Set Repository Name As Env Variable
+      - name: Set repository name as env variable
+        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      # Put google services json from actions secret
+      - name: Create Google Services JSON File
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: echo $GOOGLE_SERVICES_JSON | base64 -di > /home/runner/work/bober-chat-client/bober-chat-client/app/google-services.json
+
+      - name: setup Firebase Tools
+        run: |
+          curl -sL firebase.tools | bash
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: "zulu" # See 'Supported distributions' for available options
+          java-version: "17"
+          cache: "gradle"
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      # Run Tests Build
+      - name: Run gradle tests
+        run: ./gradlew test
+
+      # Run Build Project
+      - name: Build gradle project
+        run: ./gradlew build
+
+      - name: Generate and upload SHA1 to Firebase
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          sha1_hash=$(./gradlew signingReport | grep '^SHA1: '  | uniq | sed 's/SHA1: //' | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          firebase apps:android:sha:create ${{ secrets.FIREBASE_APP_ID }} $sha1_hash --project ${{ secrets.FIREBASE_PROJECT_ID }} --token ${{ secrets.FIREBASE_TOKEN }}
+
+      # Create APK Debug
+      - name: Build apk debug project (APK) - ${{ env.main_project_module }} module
+        run: ./gradlew assembleDebug
+
+      # Create APK Release
+      - name: Build apk release project (APK) - ${{ env.main_project_module }} module
+        run: ./gradlew assemble
+
+      # Create Bundle AAB Release
+      # Noted for main module build [main_project_module]:bundleRelease
+      - name: Build app bundle release (AAB) - ${{ env.main_project_module }} module
+        run: ./gradlew ${{ env.main_project_module }}:bundleRelease
+
+      # Upload Artifact Build
+      # Noted For Output [main_project_module]/build/outputs/apk/debug/
+      - name: Upload APK Debug - ${{ env.repository_name }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.playstore_name }} - ${{ env.repository_name }} - APK debug
+          path: ${{ env.main_project_module }}/build/outputs/apk/debug/
+
+      # Noted For Output [main_project_module]/build/outputs/apk/release/
+      - name: Upload APK Release - ${{ env.repository_name }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.playstore_name }} - ${{ env.repository_name }} - APK release
+          path: ${{ env.main_project_module }}/build/outputs/apk/release/
+
+      # Noted For Output [main_project_module]/build/outputs/bundle/release/
+      - name: Upload AAB (App Bundle) Release - ${{ env.repository_name }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.playstore_name }} - ${{ env.repository_name }} - AAB bundle release
+          path: ${{ env.main_project_module }}/build/outputs/bundle/release/
+
+  github-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    name: Create github release and upload files
+    needs:
+      - build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # IMPORTANT: mandatory for making GitHub Releases
+      id-token: write # IMPORTANT: mandatory for sigstore
+
+    steps:
+      - name: Download debug artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.playstore_name }} - ${{ env.repository_name }} - APK debug
+          path: debug/
+      - name: Download release artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.playstore_name }} - ${{ env.repository_name }} - APK release
+          path: release/
+      - name: Download aab artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.playstore_name }} - ${{ env.repository_name }} - AAB bundle release
+          path: aab/
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: gh release create '${{ github.ref_name }}' --repo '${{ github.repository }}' --notes ""
+
+      - name: Upload artifact signatures to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload '${{ github.ref_name }}' debug/*.apk --repo '${{ github.repository }}'
+          gh release upload '${{ github.ref_name }}' release/*.apk --repo '${{ github.repository }}'
+          gh release upload '${{ github.ref_name }}' aab/*.aab --repo '${{ github.repository }}'
