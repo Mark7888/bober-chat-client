@@ -1,10 +1,19 @@
 package me.mark7888.boberchat
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import java.io.IOException
+import java.net.URL
 
 
 class MessagingService : FirebaseMessagingService() {
@@ -26,10 +35,48 @@ class MessagingService : FirebaseMessagingService() {
             return
         }
 
-        if (remoteMessage.data.containsKey("message")) {
+        if (remoteMessage.data["message"]?.isNotEmpty() == true &&
+            remoteMessage.data["senderEmail"]?.isNotEmpty() == true &&
+            remoteMessage.data["senderName"]?.isNotEmpty() == true &&
+            remoteMessage.data["senderPicture"]?.isNotEmpty() == true &&
+            remoteMessage.data["messageType"]?.isNotEmpty() == true) {
             MessageHandler.notifyNewMessage(remoteMessage.data)
 
+            val messageSenderName = remoteMessage.data["senderName"] ?: "Unknown"
+            var textContent = remoteMessage.data["message"] ?: "Unknown"
+            if (remoteMessage.data["messageType"] == "image") {
+                textContent = "Sent an image."
+            }
+
+            var bitmapImage : Bitmap? = null
+            try {
+                val url = URL(remoteMessage.data["senderPicture"])
+                bitmapImage = BitmapFactory.decodeStream(url.openConnection().getInputStream())
+            } catch (e: IOException) {
+                println(e)
+            }
+
             // TODO: Show a notification
+            val builder = NotificationCompat.Builder(this, "BOBERCHAT")
+                .setSmallIcon(R.drawable.ic_stat_group)
+                .setLargeIcon(bitmapImage)
+                .setContentTitle(messageSenderName)
+                .setContentText(textContent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+
+            with(NotificationManagerCompat.from(this)) {
+                if (ActivityCompat.checkSelfPermission(
+                        this@MessagingService,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return@with
+                }
+                val notificationId = (0..100000).random()
+                notify(notificationId, builder.build())
+                Log.d("MessagingService", "Notification sent: $notificationId")
+            }
 
             return
         }

@@ -1,8 +1,13 @@
 package me.mark7888.boberchat
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,7 +19,9 @@ import android.widget.ImageView
 import android.widget.ListView
 import android.widget.SearchView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -123,11 +130,41 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
             }
         })
 
-        // loadChats()
+        // check if notification permission, request permission
+        checkNotificationPermission()
     }
 
     override fun onChatsUpdate() {
         loadChats()
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(
+                    this@MainActivity,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this@MainActivity,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    1
+                )
+            }
+        }
+
+        createNotificationChannel()
+    }
+
+    private fun createNotificationChannel() {
+        val name = "BoberChat"
+        val descriptionText = "BoberChat notifications"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel("BOBERCHAT", name, importance).apply {
+            description = descriptionText
+        }
+        val notificationManager: NotificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.createNotificationChannel(channel)
     }
 
 
