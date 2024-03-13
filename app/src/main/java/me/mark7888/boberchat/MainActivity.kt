@@ -3,10 +3,13 @@ package me.mark7888.boberchat
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -159,10 +162,20 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
     private fun createNotificationChannel() {
         val name = "BoberChat"
         val descriptionText = "BoberChat notifications"
+
+        val sound =
+            Uri.parse((ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + this.packageName) + "/" + R.raw.bober_notification)
+        val attributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .build()
+
         val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel = NotificationChannel("BOBERCHAT", name, importance).apply {
             description = descriptionText
         }
+        channel.setSound(sound, attributes)
+
+
         val notificationManager: NotificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
     }
