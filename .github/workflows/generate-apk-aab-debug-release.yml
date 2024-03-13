@@ -36,6 +36,10 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: echo $GOOGLE_SERVICES_JSON | base64 -di > /home/runner/work/bober-chat-client/bober-chat-client/app/google-services.json
 
+      - name: setup Firebase Tools
+        run: |
+          curl -sL firebase.tools | bash
+
       - name: Set Up JDK
         uses: actions/setup-java@v3
         with:
@@ -53,6 +57,11 @@ jobs:
       # Run Build Project
       - name: Build gradle project
         run: ./gradlew build
+
+      - name: Generate and upload SHA1 to Firebase
+        run: |
+          sha1_hash=$(./gradlew signingReport | grep '^SHA1: '  | uniq | sed 's/SHA1: //' | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          firebase apps:android:sha:create ${{ secrets.FIREBASE_APP_ID }} $sha1_hash --project ${{ secrets.FIREBASE_PROJECT_ID }} --token ${{ secrets.FIREBASE_TOKEN }}
 
       # Create APK Debug
       - name: Build apk debug project (APK) - ${{ env.main_project_module }} module
