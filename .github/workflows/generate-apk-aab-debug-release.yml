@@ -88,6 +88,20 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: ./gradlew assemble
 
+        # TEST
+      - name: Sign release APK
+        env:
+          JARSIGNER_KEYSTORE: ${{ secrets.JARSIGNER_KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          [ -z "$JARSIGNER_KEYSTORE" ] && ( echo "Missing keystore secret! Skipping jarsign..." && exit 0 )
+          jarsigner --help
+          echo $JARSIGNER_KEYSTORE | base64 -di > release-key.keystore
+          [ -z "${KEY_PASSWORD}" ] && ( echo "TEST" && export KEY_PASSWORD="$KEYSTORE_PASSWORD" )
+          jarsigner -verbose -keystore release-key.keystore -storepass $KEYSTORE_PASSWORD -keypass $KEY_PASSWORD -signedjar release/app-release-signed.apk release/app-release-unsigned.apk bober_alias
+          jarsigner -verify -verbose release/app-release-signed.apk
+
       # Create Bundle AAB Release
       # Noted for main module build [main_project_module]:bundleRelease
       - name: Build app bundle release (AAB) - ${{ env.main_project_module }} module
@@ -148,18 +162,6 @@ jobs:
         with:
           name: ${{ env.playstore_name }} - ${{ env.repository_name }} - AAB bundle release
           path: aab/
-
-      - name: Sign release APK
-        env:
-          JARSIGNER_KEYSTORE: ${{ secrets.JARSIGNER_KEYSTORE }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          [ -z "$JARSIGNER_KEYSTORE" ] && ( echo "Missing keystore secret! Skipping jarsign..." && exit 0 )
-          echo $JARSIGNER_KEYSTORE | base64 -di > release-key.keystore
-          [ -z "${KEY_PASSWORD}" ] && ( export KEY_PASSWORD="$KEYSTORE_PASSWORD" )
-          jarsigner -verbose -keystore release-key.keystore -storepass $KEYSTORE_PASSWORD -keypass $KEY_PASSWORD -signedjar release/app-release-signed.apk release/app-release-unsigned.apk bober_alias
-          jarsigner -verify -verbose release/app-release-signed.apk
 
       - name: Create GitHub Release
         env:
