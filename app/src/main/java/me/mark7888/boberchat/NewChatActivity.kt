@@ -67,6 +67,7 @@ class NewChatActivity : AppCompatActivity() {
                         intent.putExtra("recipientName", name)
                         intent.putExtra("recipientEmail", email)
                         this.startActivity(intent)
+                        this.finish()
                     }
                 }.start()
 
