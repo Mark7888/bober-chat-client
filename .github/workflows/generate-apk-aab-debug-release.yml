@@ -46,6 +46,22 @@ jobs:
           java-version: "17"
           cache: "gradle"
 
+      - name: Bump version - Commit
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: chkfung/android-version-actions@v1.2.2
+        with:
+          gradlePath: app/build.gradle
+          versionCode: ${{github.run_number}}
+          versionName: ${{ github.ref_name }}
+
+      - name: Bump version - Tag
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: chkfung/android-version-actions@v1.2.2
+        with:
+          gradlePath: app/build.gradle
+          versionCode: ${{github.run_number}}
+          versionName: ${{ github.ref_name }}
+
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
