@@ -1,6 +1,8 @@
 package me.mark7888.boberchat
 
 import android.Manifest
+import android.content.Intent
+import android.app.PendingIntent;
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -42,27 +44,34 @@ class MessagingService : FirebaseMessagingService() {
             remoteMessage.data["messageType"]?.isNotEmpty() == true) {
             MessageHandler.notifyNewMessage(remoteMessage.data)
 
+            val messageSenderProfileUrl = remoteMessage.data["senderPicture"] ?: ""
+            val messageSenderEmail = remoteMessage.data["senderEmail"] ?: "unknown"
             val messageSenderName = remoteMessage.data["senderName"] ?: "Unknown"
             var textContent = remoteMessage.data["message"] ?: "Unknown"
             if (remoteMessage.data["messageType"] == "image") {
                 textContent = "Sent an image."
             }
 
-            var bitmapImage : Bitmap? = null
-            try {
-                val url = URL(remoteMessage.data["senderPicture"])
-                bitmapImage = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-            } catch (e: IOException) {
-                println(e)
-            }
+            val bitmapImage : Bitmap? = BitmapUtils.getBitmapFromURL(messageSenderProfileUrl)
 
-            // TODO: Show a notification
+            // Create an explicit intent for an Activity in your app.
+            val intent = Intent(this, ChatActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            intent.putExtra("recipientProfilePicture", messageSenderProfileUrl)
+            intent.putExtra("recipientName", messageSenderName)
+            intent.putExtra("recipientEmail", messageSenderEmail)
+
+
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
             val builder = NotificationCompat.Builder(this, "BOBERCHAT")
                 .setSmallIcon(R.drawable.ic_stat_group)
                 .setLargeIcon(bitmapImage)
                 .setContentTitle(messageSenderName)
                 .setContentText(textContent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
 
             with(NotificationManagerCompat.from(this)) {
