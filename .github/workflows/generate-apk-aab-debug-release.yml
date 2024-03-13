@@ -149,6 +149,18 @@ jobs:
           name: ${{ env.playstore_name }} - ${{ env.repository_name }} - AAB bundle release
           path: aab/
 
+      - name: Sign release APK
+        if: ${{ secrets.JARSIGNER_KEYSTORE }}
+        env:
+          JARSIGNER_KEYSTORE: ${{ secrets.JARSIGNER_KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo $JARSIGNER_KEYSTORE | base64 -di > release-key.keystore
+          [ -z "${KEY_PASSWORD}" ] && ( export KEY_PASSWORD="$KEYSTORE_PASSWORD" )
+          jarsigner -verbose -keystore release-key.keystore -storepass ${{ secrets.KEYSTORE_PASSWORD }} -keypass ${{ secrets.KEY_PASSWORD }} -signedjar release/app-release-signed.apk release/app-release-unsigned.apk bober_alias
+          jarsigner -verify -verbose release/app-release-signed.apk
+
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ github.token }}

@@ -27,3 +27,13 @@ Also add the following to the repository secrets:
 - `FIREBASE_APP_ID` - the Firebase app ID
 
 firebase apps:android:sha:create `APP_ID` `SHA_HASH` --project `PROJECT_ID`
+
+# JarSigner
+
+1. Create a keystore
+   `keytool -genkey -v -keystore my-release-key.keystore -alias bober_alias -keyalg RSA -validity 10000`
+2. Enter your details as prompted. Remember the password you set.
+3. Encrypt your keystore file with `base64 my-release-key.keystore` and add the output to the repository secrets as `JARSIGNER_KEYSTORE`
+4. Add the following to the repository secrets:
+   - `KEYSTORE_PASSWORD` - the password you set for the keystore
+   - `KEY_PASSWORD` - the password you set for the key (probably the same as the keystore password)
