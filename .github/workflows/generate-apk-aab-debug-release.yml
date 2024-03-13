@@ -157,7 +157,6 @@ jobs:
         run: |
           [ -z "$JARSIGNER_KEYSTORE" ] && ( echo "Missing keystore secret! Skipping jarsign..." && exit 0 )
           echo $JARSIGNER_KEYSTORE | base64 -di > release-key.keystore
-          [ -z "${KEY_PASSWORD}" ] && ( export KEY_PASSWORD="$KEYSTORE_PASSWORD" )
           jarsigner -verbose -keystore release-key.keystore -storepass $KEYSTORE_PASSWORD -keypass $KEY_PASSWORD -signedjar release/app-release-signed.apk release/app-release-unsigned.apk bober_alias
           jarsigner -verify -verbose release/app-release-signed.apk
 
