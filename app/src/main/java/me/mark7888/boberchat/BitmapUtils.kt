@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.AsyncTask
+import android.util.Log
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -23,6 +24,18 @@ class BitmapLoader : AsyncTask<String, Void, Bitmap>() {
             e.printStackTrace()
         }
         return bmp
+    }
+}
+
+object BitmapUtils {
+    fun getBitmapFromURL(src: String?): Bitmap? {
+        return try {
+            val url = URL(src)
+            return BitmapFactory.decodeStream(url.openConnection().getInputStream())
+        } catch (e: Exception) {
+            Log.e("BitmapUtils", e.message.toString())
+            null
+        }
     }
 }
 
