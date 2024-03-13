@@ -1,11 +1,10 @@
 package me.mark7888.boberchat
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.Intent
-import android.app.PendingIntent;
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -14,8 +13,6 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import java.io.IOException
-import java.net.URL
 
 
 class MessagingService : FirebaseMessagingService() {
@@ -61,7 +58,6 @@ class MessagingService : FirebaseMessagingService() {
             intent.putExtra("recipientProfilePicture", messageSenderProfileUrl)
             intent.putExtra("recipientName", messageSenderName)
             intent.putExtra("recipientEmail", messageSenderEmail)
-
 
             val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
