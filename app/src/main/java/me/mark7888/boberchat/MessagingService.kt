@@ -2,6 +2,7 @@ package me.mark7888.boberchat
 
 import android.Manifest
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -125,8 +126,15 @@ object MessageHandler {
         onNewMessageListener?.onNewMessage(data)
     }
 
-    fun sendMessage(recipientEmail : String, message: String) {
-        ConnectionHandler.postRequestJson("/send_message", "{ \"apiKey\" : \"${AuthenticationHandler.getApiKey()}\", \"recipientEmail\" : \"${recipientEmail}\", \"messageType\" : \"text\", \"messageData\" : \"${message}\" }")
+    fun sendMessage(recipientEmail : String, message: String, messageType: String = "text") {
+        ConnectionHandler.postRequestJson("/send_message", "{ \"apiKey\" : \"${AuthenticationHandler.getApiKey()}\", \"recipientEmail\" : \"${recipientEmail}\", \"messageType\" : \"${messageType}\", \"messageData\" : \"${message}\" }")
         Log.d("MessageHandler", "Message sent to $recipientEmail: $message")
+    }
+
+    fun sendImage(recipientEmail: String, imageUri: String, context: Context) {
+        Log.d("MessageHandler", "Sending image to $recipientEmail: $imageUri")
+        val imageHash = ConnectionHandler.uploadImageRequest("/upload_image?apiKey=${AuthenticationHandler.getApiKey()}", AuthenticationHandler.getApiKey(), imageUri, context)
+        val urlToImage = ConnectionHandler.SERVER_BASE_URL + "/get_image/$imageHash"
+        sendMessage(recipientEmail, urlToImage ?: "null", "image")
     }
 }

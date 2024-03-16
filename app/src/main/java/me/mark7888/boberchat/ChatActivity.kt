@@ -4,8 +4,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +20,10 @@ import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -35,6 +42,8 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
     private lateinit var listAdapter: MessageListAdapter
     private lateinit var messagesList: ListView
 
+    private val pickImage = 100
+    private var imageUri: Uri? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
@@ -85,6 +94,16 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
             }
         }
 
+        val pickImageButton = findViewById<ImageButton>(R.id.pick_image_button)
+        pickImageButton.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+            }
+
+            val gallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+            startActivityForResult(gallery, pickImage)
+        }
+
         val profilePicture = findViewById<ImageView>(R.id.profile_pic_image)
         profilePicture.setImageBitmap(profilePictureBitmap)
 
@@ -120,6 +139,29 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
 
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == RESULT_OK && requestCode == pickImage) {
+            imageUri = data?.data
+
+            addMessageToList(MessageListItem(
+                messageType = "image",
+                messageContent = imageUri.toString(),
+                isSent = true,
+                profilePicture = BitmapLoader().execute(intent.getStringExtra("recipientProfilePicture")).get(),
+                messageId = "0"
+            ))
+
+            val recipientEmail = intent.getStringExtra("recipientEmail")
+            if (recipientEmail != null) {
+
+                Thread {
+                    val response = MessageHandler.sendImage(recipientEmail, imageUri.toString(), this)
+                }.start()
+            }
+        }
+    }
+
     fun addMessageToList(message: MessageListItem) {
         chatList.add(message)
         listAdapter.notifyDataSetChanged()
@@ -150,7 +192,6 @@ class ChatActivity : AppCompatActivity(), MessageHandler.OnNewMessageListener {
 }
 
 
-
 data class MessageListItem(
     val messageType : String,
     val messageContent : String,
@@ -172,18 +213,26 @@ class MessageListAdapter(context: Context, private val data: List<MessageListIte
 
     override fun getItemViewType(position: Int): Int {
         // Return 0 for sent messages, 1 for received messages
+        // return 2 for sent images, 3 for received images
+        return if (data[position].messageType == "image") {
+            if (data[position].isSent) 2 else 3
+        } else
         return if (data[position].isSent) 0 else 1
     }
 
     override fun getViewTypeCount(): Int {
         // We have two types of views
-        return 2
+        return 4
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val item = data[position]
 
-        val layoutId = if (getItemViewType(position) == 0) R.layout.message_item_sender else R.layout.message_item_reciever
+
+        val layoutId = if (getItemViewType(position) == 0) R.layout.message_item_sender else
+            if (getItemViewType(position) == 1) R.layout.message_item_reciever else
+                if (getItemViewType(position) == 2) R.layout.message_item_sender_image else
+                    R.layout.message_item_reciever_image
 
         val view = convertView ?: LayoutInflater.from(context).inflate(layoutId, parent, false)
 
@@ -191,9 +240,22 @@ class MessageListAdapter(context: Context, private val data: List<MessageListIte
             view.findViewById<ImageView>(R.id.profile_picture)?.setImageBitmap(item.profilePicture)
         }
 
-        val messageContent = view.findViewById<TextView>(R.id.message_text)
-        messageContent.text = item.messageContent
+        if (item.messageType == "image") {
+            val imageContent = view.findViewById<ImageView>(R.id.message_image)
+            imageContent.loadImage(item.messageContent)
+        } else {
+            val messageContent = view.findViewById<TextView>(R.id.message_text)
+
+            messageContent.text = item.messageContent
+        }
 
         return view
+    }
+
+    fun ImageView.loadImage(url: String) {
+        Glide.with(this)
+            .load(url)
+            .apply(RequestOptions().override(300, 300)) // Optional: resize the image
+            .into(this)
     }
 }

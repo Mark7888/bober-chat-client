@@ -60,6 +60,14 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
+        <ImageButton
+            android:id="@+id/pick_image_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/pick_image_icon"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="5dp"/>
+
         <EditText
             android:id="@+id/message_content_input"
             android:layout_width="0dp"
@@ -68,9 +76,7 @@
             android:ems="10"
             android:hint="Type your text here..."
             android:inputType="text"
-            android:layout_marginLeft="10dp"
             android:layout_marginBottom="5dp"
-            android:layout_marginRight="10dp"
             android:padding="10dp" />
 
         <ImageButton
@@ -78,7 +84,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/paper_airplane_icon"
-            android:layout_marginRight="10dp"/>
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="5dp"/>
     </LinearLayout>
 
 </LinearLayout>

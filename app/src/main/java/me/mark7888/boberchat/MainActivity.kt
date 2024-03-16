@@ -22,7 +22,6 @@ import android.widget.ImageView
 import android.widget.ListView
 import android.widget.SearchView
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -174,6 +173,7 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
             description = descriptionText
         }
         channel.setSound(sound, attributes)
+        channel.enableLights(true)
 
 
         val notificationManager: NotificationManager = getSystemService(NotificationManager::class.java)
@@ -197,8 +197,6 @@ class MainActivity : AppCompatActivity(), AuthenticationHandler.OnChatsUpdateLis
             }
 
             val chats = ConnectionHandler.getRequestJson("/get_chats?apiKey=${AuthenticationHandler.getApiKey()}")
-
-            Log.d("MainActivity", "Chats: '$chats'")
 
             val jsonArray: JsonArray = JsonParser.parseString(chats).asJsonArray
             chatList = jsonArray.map { ChatListItem(it.asJsonObject) }
