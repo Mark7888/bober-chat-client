@@ -12,6 +12,9 @@ Welcome to the README for the Android chat application developed for the complex
 - **Search Functionality**: Users can search among their chat partners to quickly find and access conversations.
 - **Responsive Design**: The application features responsive design with both light and dark modes for enhanced user experience.
 
+## Example Screenshot
+![Example Screenshot](pictures/chat_app_screenshot.png)
+
 ## Server Repository
 For backend functionalities and server setup, please refer to my [Python backend server repository](https://github.com/Mark7888/bober-chat-server).
 
