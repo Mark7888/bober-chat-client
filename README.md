@@ -10,6 +10,7 @@ Welcome to the README for the Android chat application developed for the complex
 - **Real-time Notifications**: The application sends out real-time notifications for new messages. Users can click on notifications to open the chat directly.
 - **Email Address as Usernames**: Usernames are based on email addresses, enabling users to send messages to specific email addresses.
 - **Search Functionality**: Users can search among their chat partners to quickly find and access conversations.
+- **Responsive Design**: The application features responsive design with both light and dark modes for enhanced user experience.
 
 ## Server Repository
 For backend functionalities and server setup, please refer to my [Python backend server repository](https://github.com/Mark7888/bober-chat-server).
